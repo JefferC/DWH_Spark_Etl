@@ -22,3 +22,6 @@ SPARKCONFIG = {
     "spark.sql.warehouse.dir": SPARK_WAREHOUSE_DIR,
     "spark.task.maxFailures" : 4
 }
+
+# ALL, DEBUG, ERROR, FATAL, INFO, OFF, TRACE, WARN
+WARNING_LEVEL = 'OFF'

@@ -52,6 +52,9 @@ class SqlUtil:
         Result = []
         # 循环sql列表将引号替换回去
         for i in sql:
+            # ToDo 干掉注释后面的字符串 以及注释内的内容。
+            # ToDo 分别有两种注释，一种是单行注释： --
+            # ToDo 第二种是多行注释， /* ... */
             Result.append(i.replace('\1',';').strip())
         return Result
 

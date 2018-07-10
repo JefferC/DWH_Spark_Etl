@@ -29,6 +29,8 @@ class SparkObject:
             conf.set(i,Config.SPARKCONFIG[i])
         # 创建SparkSession实例
         self.SpkSess = SparkSession.builder.config(conf=conf).enableHiveSupport().getOrCreate()
+        self.SpkCont = self.SpkSess.sparkContext
+        self.SpkCont.setLogLevel(Config.WARNING_LEVEL)
 
     def getSparkSession(self):
         return self.SpkSess
