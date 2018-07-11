@@ -10,7 +10,7 @@ ss = SparkObject.SparkObject()
 sql = '''
     show databases;
     use tmp;
-    show tables
+    show tables;
 '''
 
 err = ss.execSql(sql)

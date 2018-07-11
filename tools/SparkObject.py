@@ -55,5 +55,6 @@ class SparkObject:
                     r.show(truncate=False)
         except Exception as e:
             StatsCode = 1
-            print e
+            self.log.wtLog("Error", "Exec SQL Failed")
+            self.log.wtLog("Error", str(e))
         return StatsCode
