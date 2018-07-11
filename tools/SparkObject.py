@@ -21,16 +21,17 @@ class SparkObject:
         if not ifinit:
             if isinstance(ss,SparkSession):
                 self.SpkSess = ss
-                self.log.log("INFO","Set exists sparksession")
+                self.log.wtLog("INFO","Set exists sparksession")
                 return True
             else:
-                self.log.log("Error","ss is not a SparkSession instance. exit 12")
+                self.log.wtLog("Error","ss is not a SparkSession instance. exit 12")
                 exit(12)
         # 创建SparkConf实例
         conf = SparkConf().setAppName(Config.SPARK_APPNAME).setMaster(Config.HADOOP_MASTER)
         # 添加所有配置信息，可在Config.py中配置
         for i in Config.SPARKCONFIG:
             conf.set(i,Config.SPARKCONFIG[i])
+            self.log.wtLog("INFO","Add Config: %s To: %s" %(i,Config.SPARKCONFIG[i]))
         # 创建SparkSession实例
         self.SpkSess = SparkSession.builder.config(conf=conf).enableHiveSupport().getOrCreate()
         self.SpkCont = self.SpkSess.sparkContext

@@ -10,11 +10,7 @@ ss = SparkObject.SparkObject()
 sql = '''
     show databases;
     use tmp;
-    show tables;
-    /* select 99 from firsttb
-    */
-    
-    select * from firsttb --where memo not like '%;%'
+    show tables
 '''
 
 err = ss.execSql(sql)

@@ -54,6 +54,9 @@ class SqlUtil:
         for i in sql:
             # 干掉注释内的内容。
             res = SqlUtil.RemoveComment(i.replace('\1',';').strip())
+            # 跳过空Sql
+            if res.strip() == "":
+                continue
             Result.append(res)
         return Result
 

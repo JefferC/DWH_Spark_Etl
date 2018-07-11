@@ -13,9 +13,9 @@ class LogUtil:
         # 日志格式
         formatter = logging.Formatter('%(asctime)s %(levelname)s: %(message)s')
         # 日志文件
-        file_handler = logging.FileHandler(Config.LOGGING_DIR + os.sep + datetime.datetime.strftime(datetime.datetime.now(),"%Y-%m-%S") + ".log")
+        file_handler = logging.FileHandler(Config.LOGGING_DIR + os.sep + datetime.datetime.strftime(datetime.datetime.now(),"%Y-%m-%d") + ".log")
         file_handler.setFormatter(formatter)
-        # 控制台
+        # 控制台 --> 标准输出
         console_handler = logging.StreamHandler(sys.stdout)
         console_handler.formatter = formatter
         # 添加处理
