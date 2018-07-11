@@ -11,10 +11,10 @@ sql = '''
     show databases;
     use tmp;
     show tables;
-    drop table if exists firsttb;
-    create table firsttb(id int,name varchar(20),memo varchar(200)) stored as parquet;
-    insert into firsttb values(1,'Me','A ; B ; C . E');
-    select * from firsttb where memo like '%;%'
+    /* select 99 from firsttb
+    */
+    
+    select * from firsttb --where memo not like '%;%'
 '''
 
 err = ss.execSql(sql)

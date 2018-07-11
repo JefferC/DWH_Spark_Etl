@@ -52,16 +52,23 @@ class SqlUtil:
         Result = []
         # 循环sql列表将引号替换回去
         for i in sql:
-            # ToDo 干掉注释后面的字符串 以及注释内的内容。
-            # ToDo 分别有两种注释，一种是单行注释： --
-            # ToDo 第二种是多行注释， /* ... */
-            Result.append(i.replace('\1',';').strip())
+            # 干掉注释内的内容。
+            res = SqlUtil.RemoveComment(i.replace('\1',';').strip())
+            Result.append(res)
         return Result
 
     @classmethod
     def RegSubMethod(cls,match):
         # 替换为不可见字符。
         return match.group(0).replace(";","\1")
+
+    @classmethod
+    def RemoveComment(cls,sql):
+        reg1 = re.compile(r"\/\*[\s\S]*?\*\/")
+        reg2 = re.compile(r"--(.*)?")
+        sql = reg1.sub("",sql)
+        sql = reg2.sub("",sql)
+        return sql
 
     @classmethod
     def SplitSql_Old(cls,sql):
