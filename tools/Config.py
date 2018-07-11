@@ -12,6 +12,8 @@ SPARK_WAREHOUSE_DIR = r"D:\Profile\PyScript\pj2\data\warehouse"
 
 JOBLOG_DIR = r"D:\Profile\PyScript\pj2\Log"
 
+LOGGING_DIR = r"D:\Profile\PyScript\pj2\LOG"
+
 # ---------- 2.Names ---------- #
 SPARK_APPNAME = 'Kettle_Log'
 HADOOP_MASTER = 'local[*]'

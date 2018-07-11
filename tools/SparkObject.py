@@ -6,22 +6,26 @@
 
 from pyspark.sql import SparkSession
 from pyspark import SparkConf
-import Config,SqlUtil
+import Config,SqlUtil,LogUtil
 
 
 class SparkObject:
 
     def __init__(self):
+        self.log = LogUtil.LogUtil()
         self.setSparkSession()
 
     def setSparkSession(self,ss=None,ifinit=True):
         # 如果不需要初始化，则无需创建SparkSession实例
+        self.log.wtLog("INFO","set SparkSession")
         if not ifinit:
             if isinstance(ss,SparkSession):
                 self.SpkSess = ss
+                self.log.log("INFO","Set exists sparksession")
                 return True
             else:
-                return False
+                self.log.log("Error","ss is not a SparkSession instance. exit 12")
+                exit(12)
         # 创建SparkConf实例
         conf = SparkConf().setAppName(Config.SPARK_APPNAME).setMaster(Config.HADOOP_MASTER)
         # 添加所有配置信息，可在Config.py中配置
