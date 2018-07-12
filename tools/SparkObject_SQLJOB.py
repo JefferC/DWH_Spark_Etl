@@ -17,11 +17,9 @@ class SparkObject:
 
     def setSparkSession(self,ss=None,ifinit=True):
         # 如果不需要初始化，则无需创建SparkSession实例
-        self.logger.wtLog("INFO","set SparkSession")
         if not ifinit:
             if isinstance(ss,SparkSession):
                 self.SpkSess = ss
-                self.logger.wtLog("INFO","Set exists sparksession")
                 return True
             else:
                 self.logger.wtLog("Error","ss is not a SparkSession instance. exit 12")
@@ -42,17 +40,20 @@ class SparkObject:
     def getSparkSession(self):
         return self.SpkSess
 
-    def execSql(self,sql):
+    def execSql(self,sql,ifhive = False,var=vars()):
         # 判断SparkSession是否存在，不存在则创建
-        if self.SpkSess == None:
+        if self.SpkSess is None:
             self.setSparkSession()
         # 状态代码： 0 成功 否则失败
         StatsCode = 0
         try:
             # 调用Sql工具箱处理分割SQL
-            for i in SqlUtil.ProcessSql(sql,vars()):
-                # ToDo: 此处还需要一个判断，是否对Hive表进行操作。使用HiveContext.sql进行执行
-                r = self.SpkSess.sql(i)
+            for i in SqlUtil.ProcessSql(sql,var):
+                # 是否对Hive表进行操作。使用HiveContext.sql进行执行
+                if ifhive:
+                    r = self.HiveCont.sql(i)
+                else:
+                    r = self.SpkSess.sql(i)
                 # 查询操作需要打印到控制台
                 if i.upper().strip().startswith("SELECT") or i.upper().strip().startswith("SHOW"):
                     r.show(truncate=False)
@@ -61,3 +62,7 @@ class SparkObject:
             self.logger.wtLog("Error", "Exec SQL Failed")
             self.logger.wtLog("Error", str(e))
         return StatsCode
+
+    def execFile(self):
+        # ToDo
+        return True

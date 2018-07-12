@@ -6,10 +6,8 @@
 import re
 
 def ProcessSql(sql,var):
-    logger = var['self'].logger
     sql = ReplaceVars(sql,ProcessVars(var))
     if not sql:
-        logger.wtLog("Error","Not A Sql")
         exit(0)
     sql = SplitSql(sql)
     return sql
