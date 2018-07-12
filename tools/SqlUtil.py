@@ -5,13 +5,8 @@
 
 import re
 
-
-
-
 def ProcessSql(sql,var):
     logger = var['self'].logger
-    # 以下的代码会出事情。注释并引以为戒
-    # sql = sql.strip().upper()
     sql = ReplaceVars(sql,ProcessVars(var))
     if not sql:
         logger.wtLog("Error","Not A Sql")
@@ -54,7 +49,7 @@ def SplitSql(sql):
     # 循环sql列表将引号替换回去
     for i in sql:
         # 干掉注释内的内容。
-        res = RemoveComment(i.replace('\1',';').strip())
+        res = RemoveComment(i).replace('\1',';').replace("\2","/*").replace("\3","*/").replace("\4","--").strip()
         # 跳过空Sql
         if res.strip() == "":
             continue
@@ -64,11 +59,13 @@ def SplitSql(sql):
 
 def RegSubMethod(match):
     # 替换为不可见字符。
-    return match.group(0).replace(";","\1")
+    return match.group(0).replace(";","\1").replace("/*","\2").replace("*/","\3").replace("--","\4")
 
 
 def RemoveComment(sql):
+    # 匹配多行注释
     reg1 = re.compile(r"\/\*[\s\S]*?\*\/")
+    # 匹配单行注释
     reg2 = re.compile(r"--(.*)?")
     sql = reg1.sub("",sql)
     sql = reg2.sub("",sql)

@@ -5,7 +5,7 @@
 
 
 from pyspark.sql import SparkSession
-from pyspark import SparkConf
+from pyspark import SparkConf,HiveContext
 import Config,SqlUtil,LogUtil
 
 
@@ -36,6 +36,8 @@ class SparkObject:
         self.SpkSess = SparkSession.builder.config(conf=conf).enableHiveSupport().getOrCreate()
         self.SpkCont = self.SpkSess.sparkContext
         self.SpkCont.setLogLevel(Config.WARNING_LEVEL)
+        # 获取HiveContext
+        self.HiveCont = HiveContext(self.SpkCont)
 
     def getSparkSession(self):
         return self.SpkSess
@@ -49,6 +51,7 @@ class SparkObject:
         try:
             # 调用Sql工具箱处理分割SQL
             for i in SqlUtil.ProcessSql(sql,vars()):
+                # ToDo: 此处还需要一个判断，是否对Hive表进行操作。使用HiveContext.sql进行执行
                 r = self.SpkSess.sql(i)
                 # 查询操作需要打印到控制台
                 if i.upper().strip().startswith("SELECT") or i.upper().strip().startswith("SHOW"):

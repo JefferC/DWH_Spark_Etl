@@ -8,9 +8,8 @@ import SparkObject
 ss = SparkObject.SparkObject()
 
 sql = '''
-    show databases;
     use tmp;
-    show tables;
+    select * from firsttb where memo not like '--'
 '''
 
 err = ss.execSql(sql)
