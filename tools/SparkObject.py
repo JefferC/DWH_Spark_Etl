@@ -6,7 +6,7 @@
 
 from pyspark.sql import SparkSession
 from pyspark import SparkConf,HiveContext
-import Config,SqlUtil,LogUtil
+import Config,SqlUtil,LogUtil,SparkUDF
 
 
 class SparkObject:
@@ -29,13 +29,20 @@ class SparkObject:
         # 添加所有配置信息，可在Config.py中配置
         for i in Config.SPARKCONFIG:
             conf.set(i,Config.SPARKCONFIG[i])
-            self.logger.wtLog("INFO","Add Config: %s To: %s" %(i,Config.SPARKCONFIG[i]))
+            #self.logger.wtLog("INFO","Add Config: %s To: %s" %(i,Config.SPARKCONFIG[i]))
         # 创建SparkSession实例
         self.SpkSess = SparkSession.builder.config(conf=conf).enableHiveSupport().getOrCreate()
         self.SpkCont = self.SpkSess.sparkContext
         self.SpkCont.setLogLevel(Config.WARNING_LEVEL)
         # 获取HiveContext
         self.HiveCont = HiveContext(self.SpkCont)
+        # 元数据
+        self.catalog = self.SpkSess.catalog
+        # 版本判断
+        self.SpkVersion = self.SpkSess.version
+        if not self.SpkVersion.startswith("2."):
+            self.logger.wtLog("ERROR","Only Spark2.0 Supported! Current Version: %s " %self.SpkVersion)
+            exit(12)
 
     def getSparkSession(self):
         return self.SpkSess
@@ -66,3 +73,20 @@ class SparkObject:
     def execFile(self):
         # ToDo
         return True
+
+
+    # 注册Spark UDF
+    def register(self,func='ALL'):
+        if func == "ALL":
+            for v in vars(SparkUDF):
+                f = vars(SparkUDF)[v]
+                if callable(f):
+                    self.SpkSess.udf.register(v,f)
+        else:
+            self.SpkSess.udf.register(func,vars(SparkUDF)[func])
+
+
+    def destroy(self):
+        self.SpkSess.stop()
+        self.logger.wtLog("Error","Job Destroy")
+        exit(12)
