@@ -15,10 +15,10 @@ class SparkObject:
         self.logger = LogUtil.LogUtil()
         self.setSparkSession()
 
-    def setSparkSession(self,ss=None,ifinit=True):
+    def setSparkSession(self, ss=None, ifinit=True):
         # 如果不需要初始化，则无需创建SparkSession实例
         if not ifinit:
-            if isinstance(ss,SparkSession):
+            if isinstance(ss, SparkSession):
                 self.SpkSess = ss
                 return True
             else:
@@ -28,7 +28,7 @@ class SparkObject:
         conf = SparkConf().setAppName(Config.SPARK_APPNAME).setMaster(Config.HADOOP_MASTER)
         # 添加所有配置信息，可在Config.py中配置
         for i in Config.SPARKCONFIG:
-            conf.set(i,Config.SPARKCONFIG[i])
+            conf.set(i, Config.SPARKCONFIG[i])
             #self.logger.wtLog("INFO","Add Config: %s To: %s" %(i,Config.SPARKCONFIG[i]))
         # 创建SparkSession实例
         self.SpkSess = SparkSession.builder.config(conf=conf).enableHiveSupport().getOrCreate()
@@ -47,7 +47,7 @@ class SparkObject:
     def getSparkSession(self):
         return self.SpkSess
 
-    def execSql(self,sql,ifhive = False,var=vars()):
+    def execSql(self, sql, ifhive=False, var=vars()):
         # 判断SparkSession是否存在，不存在则创建
         if self.SpkSess is None:
             self.setSparkSession()
@@ -74,9 +74,8 @@ class SparkObject:
         # ToDo
         return True
 
-
     # 注册Spark UDF
-    def register(self,func='ALL'):
+    def register(self, func='ALL'):
         if func == "ALL":
             for v in vars(SparkUDF):
                 f = vars(SparkUDF)[v]
@@ -85,6 +84,25 @@ class SparkObject:
         else:
             self.SpkSess.udf.register(func,vars(SparkUDF)[func])
 
+    def LoadLocalFile(self, source, target, sourcetype="textfile"):
+        # ToDo: 直接加载到表
+        source = "file:///" + source
+        if sourcetype.lower in ["json","jsonfile"]:
+            self.LoadJson(source, target, iflocal=True)
+        return True
+
+    def LoadJson(self, source, target, iflocal=False):
+        # ToDo: 直接加载到表
+        if iflocal:
+            if not source.startswith(r"file:///"):
+                self.logger.wtLog("ERROR","If Load Local file into Table, Source Dir should starts with file:///, please check:%s" %source)
+                self.destroy()
+            else:
+                if target.count(".") != 1:
+                    self.logger.wtLog("ERROR", "target table should like : target_bd.target_tb : %s" %target)
+                    self.destroy()
+                db, tb = target.split(".")
+                # ToDo: 普通的Load使用Load命令即可，这边设想的是更灵活的加载方式
 
     def destroy(self):
         self.SpkSess.stop()

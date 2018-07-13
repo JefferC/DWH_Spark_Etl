@@ -9,11 +9,17 @@ ss = SparkObject.SparkObject()
 
 
 sql = '''
-    use tmp;
-    select addv1v2(ver1,ver2),ver1,ver2 from udftest
+    show databases
 '''
 
 err = ss.execSql(sql,var=vars())
 
 if err != 0:
     exit(12)
+
+while True:
+    a = raw_input("sql:")
+    if a == 'quit':
+        exit()
+    else:
+        ss.execSql(a,var=vars())
