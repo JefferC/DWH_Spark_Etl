@@ -84,15 +84,42 @@ class SparkObject:
         else:
             self.SpkSess.udf.register(func,vars(SparkUDF)[func])
 
-    def LoadLocalFile(self, source, target, sourcetype="textfile"):
-        # ToDo: 直接加载到表
+    def LoadLocalFile(self, source, target, sourcetype="textfile", mode="append", format="parquet", partition=""):
+        # 加载本地文件
         source = "file:///" + source
         if sourcetype.lower in ["json","jsonfile"]:
-            self.LoadJson(source, target, iflocal=True)
+            self.LoadJson(source, target, iflocal=True, mode=mode, format=format, partition=partition)
+        elif sourcetype.lower in ["text",'txt','txtfile','textfile']:
+            self.LoadText(source, target, iflocal=True, mode=mode, format=format, partition=partition)
         return True
 
-    def LoadJson(self, source, target, iflocal=False):
-        # ToDo: 直接加载到表
+    def LoadJson(self, source, target, iflocal=False, mode="append", format="parquet", partition=""):
+        # 正常来说都是有Load的配置信息保存在文件或者数据库里面。这里只提供方法，不考虑整体
+        if iflocal:
+            # 这里不是很必要，可以判断是否格式不对，随后根据判断手动加上
+            if not source.startswith(r"file:///"):
+                self.logger.wtLog("ERROR","If Load Local file into Table, Source Dir should starts with file:///, please check:%s" %source)
+                self.destroy()
+            else:
+                # 必须要带数据库名
+                if target.count(".") != 1:
+                    self.logger.wtLog("ERROR", "target table should like : target_bd.target_tb : %s" %target)
+                    self.destroy()
+                #rdd = self.SpkCont.textFile(source)
+                try:
+                    df = self.SpkSess.read.json(source)
+                    if partition == "":
+                        df.write.format(format).mode(mode).saveAsTable(target)
+                    else:
+                        df.write.format(format).partitionBy(partition).mode(mode).saveAsTable(target)
+                except Exception as e:
+                    # 一般来说这里报错都是文件不存在或者文件格式不对
+                    self.logger.wtLog("Error","LoadJson Error!")
+                    self.logger.wtLog("Error",str(e))
+                    exit(12)
+
+
+    def LoadText(self, source, target, iflocal=True, mode="append", format="parquet", partition=""):
         if iflocal:
             if not source.startswith(r"file:///"):
                 self.logger.wtLog("ERROR","If Load Local file into Table, Source Dir should starts with file:///, please check:%s" %source)
@@ -101,8 +128,21 @@ class SparkObject:
                 if target.count(".") != 1:
                     self.logger.wtLog("ERROR", "target table should like : target_bd.target_tb : %s" %target)
                     self.destroy()
-                db, tb = target.split(".")
-                # ToDo: 普通的Load使用Load命令即可，这边设想的是更灵活的加载方式
+                try:
+                    rdd = self.SpkCont.textFile(source)
+                    # 先默认流一下。后期改善: \t为字段分隔符
+                    rdd = rdd.map(lambda x: x.split('\t'))
+                    df = self.SpkSess.createDataFrame(rdd)
+                    if partition == "":
+                        df.write.format(format).mode(mode).saveAsTable(target)
+                    else:
+                        df.write.format(format).partitionBy(partition).mode(mode).saveAsTable(target)
+                except Exception as e:
+                    self.logger.wtLog("Error","LoadText Error!")
+                    self.logger.wtLog("Error",str(e))
+                    exit(12)
+
+        return True
 
     def destroy(self):
         self.SpkSess.stop()
