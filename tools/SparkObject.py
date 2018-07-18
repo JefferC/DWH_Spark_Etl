@@ -6,14 +6,16 @@
 
 from pyspark.sql import SparkSession
 from pyspark import SparkConf,HiveContext
+from pyspark.streaming import StreamingContext
 import Config,SqlUtil,LogUtil,SparkUDF
-
+import re
 
 class SparkObject:
 
     def __init__(self):
         self.logger = LogUtil.LogUtil()
         self.setSparkSession()
+        self.SpkStream = ""
 
     def setSparkSession(self, ss=None, ifinit=True):
         # 如果不需要初始化，则无需创建SparkSession实例
@@ -62,7 +64,9 @@ class SparkObject:
                 else:
                     r = self.SpkSess.sql(i)
                 # 查询操作需要打印到控制台
-                if i.upper().strip().startswith("SELECT") or i.upper().strip().startswith("SHOW"):
+                reg_s = re.compile(r"\s+")
+                show = reg_s.split(i.upper().strip())[0]
+                if show in ['SELECT', 'DESC', 'DESCRIBE', 'SHOW', 'LIST', 'EXPLAIN']:
                     r.show(truncate=False)
         except Exception as e:
             StatsCode = 1
@@ -87,9 +91,9 @@ class SparkObject:
     def LoadLocalFile(self, source, target, sourcetype="textfile", mode="append", format="parquet", partition=""):
         # 加载本地文件
         source = "file:///" + source
-        if sourcetype.lower in ["json","jsonfile"]:
+        if sourcetype.lower in ["json", "jsonfile"]:
             self.LoadJson(source, target, iflocal=True, mode=mode, format=format, partition=partition)
-        elif sourcetype.lower in ["text",'txt','txtfile','textfile']:
+        elif sourcetype.lower in ["text", 'txt', 'txtfile', 'textfile']:
             self.LoadText(source, target, iflocal=True, mode=mode, format=format, partition=partition)
         return True
 
@@ -141,8 +145,31 @@ class SparkObject:
                     self.logger.wtLog("Error","LoadText Error!")
                     self.logger.wtLog("Error",str(e))
                     exit(12)
-
         return True
+
+    def getconfig(self):
+        cnf = self.SpkCont.getConf()
+        wc = cnf.getAll()
+        return wc
+
+    # ToDo:该功能待验证
+    def SpkStreaming_Kafka(self, topics, target, groupid, startoffset=None):
+        # 接Kafka
+        df = self.SpkSess.readStream.format("kafka")\
+            .option("kafka.bootstrap.servers", Config.KAFKA_SERVER)\
+            .option("subscribe", topics)
+        if startoffset is not None:
+            df = df.option("startingOffsets", startoffset)
+        df = df.option("group.id", groupid).load()
+        dw = df.selectExpr("cast(value as string)").writeStream\
+            .outputMode("append")\
+            .trigger(processingTime="10 seconds")\
+            .format("parquet")\
+            .start(path="/tmp/test/%s" %target)
+
+    def StreamingInit_Old(self):
+        # 老版的Streaming没啥内容。就一个套路，实例化一个SparkSteam对象。textFile或者stock拿数据。增量。
+        self.SpkStream = StreamingContext(self.SpkCont, Config.BATCHDUR)
 
     def destroy(self):
         self.SpkSess.stop()
